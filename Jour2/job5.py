@@ -4,7 +4,7 @@ import mysql.connector
 mydb = mysql.connector.connect(
     host="localhost",
     user="root",
-    password="",  # Remplace par ton mot de passe
+    password="",  
     database="laplateforme"  
 )
 
@@ -17,15 +17,17 @@ if mydb.is_connected():
     cursor = mydb.cursor()
 
     # Exécuter la requête SQL pour récupérer les noms et capacités des salles
-    cursor.execute("SELECT nom, capacite FROM salle")
+    cursor.execute("SELECT SUM(superficie) FROM etage")
 
     # Récupérer tous les résultats
-    results = cursor.fetchall()
+    result = cursor.fetchone()
 
-    # Afficher le résultat dans la console
-    print("Liste des salles et leurs capacités:")
-    for row in results:
-        print(f"Nom: {row[0]}, Capacité: {row[1]}")
+    # Afficher la superficie totale
+    if result:
+        total_superficie = result [0]
+        print(f"La superficie de la Plateforme est de {total_superficie} m2.")
+
+
 
     # Fermer le curseur
     cursor.close()
