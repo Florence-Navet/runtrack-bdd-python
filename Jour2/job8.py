@@ -11,7 +11,7 @@ class Zoo:
         self.mydb = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="",
+            password="123456",
             database="zoo"
         )
         self.cursor = self.mydb.cursor()
@@ -191,20 +191,23 @@ zoo.ajouter_cage(100.5, 5)
 zoo.ajouter_cage(200.0, 10)
 
 # Ajouter des animaux
-zoo.ajouter_animal("Lion", "Panthera leo", "2015-03-21", "Afrique", 1)
-zoo.ajouter_animal("Éléphant", "Loxodonta", "2012-10-11", "Afrique", 2)
+# zoo.ajouter_animal("Lion", "Panthera leo", "2015-03-21", "Afrique", 1)
+# zoo.ajouter_animal("Éléphant", "Loxodonta", "2012-10-11", "Afrique", 2)
 
 # Afficher tous les animaux
 zoo.afficher_animaux()
 
 # Afficher les animaux par cage
-# zoo.afficher_animaux_par_cage()
+zoo.afficher_animaux_par_cage()
 
 # Calculer la superficie totale des cages
-# zoo.superficie_totale_cages()
+zoo.superficie_totale_cages()
 
 # Modifier un animal
-# zoo.modifier_animal(1, nom="Lion King")
+zoo.modifier_animal(1, nom="Lion King")
+
+# Afficher tous les animaux
+zoo.afficher_animaux()
 
 # Supprimer un animal
 # zoo.supprimer_animal(2)
