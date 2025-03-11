@@ -68,10 +68,9 @@ class Employe:
             print("Erreur : connexion à la base de données non établie.")
             return
 
-        # Requête pour afficher les employés avec leur service
+        # Requête pour afficher les employés avec leur service (affichage de l'id_service)
         self.cursor.execute("""
-            SELECT e.id, e.nom, e.prenom, e.salaire, 
-                   COALESCE(s.nom, 'Aucun service') AS service 
+            SELECT e.id, e.nom, e.prenom, e.salaire, e.id_service 
             FROM employe e 
             LEFT JOIN service s ON e.id_service = s.id
         """)
@@ -81,16 +80,36 @@ class Employe:
         if result:
             print("Liste des employés :")
             for row in result:
-                print(f"ID: {row[0]}, Nom: {row[1]}, Prénom: {row[2]}, Salaire: {row[3]} €, Service: {row[4]}")
+                # Afficher les résultats, en mettant l'id_service dans la colonne "Service"
+                print(f"ID: {row[0]}, Nom: {row[1]}, Prénom: {row[2]}, Salaire: {row[3]:.2f} €, Service: {row[4]}")
         else:
             print("Aucun employé trouvé.")
+
+    def supprimer_doublons(self):
+        """Supprime les doublons dans la table employe (en conservant un seul enregistrement pour chaque combinaison nom, prenom)."""
+        if not self.mydb or not self.cursor:
+            print("Erreur : connexion à la base de données non établie.")
+            return
+
+        # Requête pour supprimer les doublons, en ne gardant qu'une seule occurrence de chaque combinaison nom, prenom
+        self.cursor.execute("""
+            DELETE e1 FROM employe e1
+            INNER JOIN employe e2
+            WHERE e1.id > e2.id
+            AND e1.nom = e2.nom
+            AND e1.prenom = e2.prenom
+        """)
+        
+        # Commit les changements
+        self.mydb.commit()
+        print("Les doublons ont été supprimés avec succès.")
 
 # Connexion et exécution des opérations
 employe1 = Employe(nom="Patenne", prenom="Adeline", salaire=1800, id_service=1)
 employe1.connecter()
 
 # Ajouter un employé
-employe1.ajouter_employe()
+# employe1.ajouter_employe()
 
 # Afficher tous les employés
 employe1.afficher_employes()
@@ -100,6 +119,9 @@ employe1.update_salaire(1, 3500)
 
 # Afficher tous les employés après mise à jour
 employe1.afficher_employes()
+
+# Supprimer les doublons
+employe1.supprimer_doublons()
 
 # Fermer la connexion
 employe1.fermer_connexion()
