@@ -29,8 +29,19 @@ class Employe:
         # Supprimer tous les employés avec ce nom et prénom
         self.cursor.execute("DELETE FROM employe WHERE nom = %s AND prenom = %s", (nom, prenom))
         self.mydb.commit()
-
         print(f"Tous les employés {prenom} {nom} ont été supprimés avec succès.")
+
+    def update_salaire(self, employe_id, nouveau_salaire):
+        """Met à jour le salaire d'un employé."""
+        if not self.mydb or not self.cursor:
+            print("Erreur : connexion à la base de données non établie.")
+            return
+
+        # Mettre à jour le salaire
+        query = "UPDATE employe SET salaire = %s WHERE id = %s"
+        self.cursor.execute(query, (nouveau_salaire, employe_id))
+        self.mydb.commit()
+        print(f"Le salaire de l'employé ID {employe_id} a été mis à jour à {nouveau_salaire} €.")
 
     def fermer_connexion(self):
         """Ferme la connexion à la base de données."""
@@ -38,17 +49,6 @@ class Employe:
             self.cursor.close()
         if self.mydb:
             self.mydb.close()
-
-    def reinitialiser_auto_increment(self):
-        """Réinitialise l'auto-increment à la valeur suivante la plus basse."""
-        if not self.mydb or not self.cursor:
-            print("Erreur : connexion à la base de données non établie.")
-            return
-
-        self.cursor.execute("ALTER TABLE employe AUTO_INCREMENT = 1")
-        self.mydb.commit()
-        print("Auto-increment réinitialisé.")
-
 
     def ajouter_employe(self):
         """Ajoute un employé à la base de données."""
@@ -61,13 +61,14 @@ class Employe:
         self.cursor.execute(query, values)
         self.mydb.commit()
         print(f"Employé {self.nom} {self.prenom} ajouté avec succès.")
-        
+
     def afficher_employes(self):
         """Affiche tous les employés avec leur service."""
         if not self.mydb or not self.cursor:
             print("Erreur : connexion à la base de données non établie.")
             return
-        
+
+        # Requête pour afficher les employés avec leur service
         self.cursor.execute("""
             SELECT e.id, e.nom, e.prenom, e.salaire, 
                    COALESCE(s.nom, 'Aucun service') AS service 
@@ -84,23 +85,21 @@ class Employe:
         else:
             print("Aucun employé trouvé.")
 
-# Connexion et ajout d'un employé
+# Connexion et exécution des opérations
 employe1 = Employe(nom="Patenne", prenom="Adeline", salaire=1800, id_service=1)
 employe1.connecter()
 
-# Ajouter l'employé
-# employe1.ajouter_employe()
+# Ajouter un employé
+employe1.ajouter_employe()
 
-# Suppression de tous les employés "Adeline Patenne"
-employe1.delete_employe_par_nom_prenom("Patenne", "Adeline")
-
-# Afficher tous les employés restants
+# Afficher tous les employés
 employe1.afficher_employes()
 
-# Vérifier la connexion MySQL
-if employe1.mydb.is_connected():
-    db_info = employe1.mydb.get_server_info()
-    print(f"\nConnecté à MySQL, version : {db_info}")
+# Mettre à jour le salaire d'un employé
+employe1.update_salaire(1, 3500)
 
-# Fermer la connexion à la base de données
+# Afficher tous les employés après mise à jour
+employe1.afficher_employes()
+
+# Fermer la connexion
 employe1.fermer_connexion()
