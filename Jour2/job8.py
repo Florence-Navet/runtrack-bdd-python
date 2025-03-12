@@ -11,7 +11,7 @@ class Zoo:
         self.mydb = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="123456",
+            password="",
             database="zoo"
         )
         self.cursor = self.mydb.cursor()
