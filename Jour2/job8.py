@@ -78,11 +78,6 @@ class Zoo:
         print(f"Cage ajoutée avec succès.")
 
 
-
-
-
-
-
     def supprimer_animal(self, animal_id):
         """Supprime un animal de la base de données."""
         query = "DELETE FROM animal WHERE id = %s"
