@@ -12,7 +12,7 @@ class Zoo:
         self.mydb = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="123456"  # ⚠️ Mets ton mot de passe MySQL ici
+            password="123456"  
         )
         self.cursor = self.mydb.cursor()
 
@@ -50,11 +50,26 @@ class Zoo:
     def verifier_cage_existe(self, id_cage):
         self.cursor.execute("SELECT COUNT(*) FROM cage WHERE id = %s", (id_cage,))
         return self.cursor.fetchone()[0] > 0
-
+    
     def ajouter_animal(self, nom, race, date_naissance, pays_origine, id_cage):
         if not self.verifier_cage_existe(id_cage):
             print(f"Erreur : La cage ID {id_cage} n'existe pas !")
             return
+
+        # Vérifier la capacité de la cage
+        self.cursor.execute("SELECT capacite_max FROM cage WHERE id = %s", (id_cage,))
+        capacite_max = self.cursor.fetchone()[0]
+
+        # Vérifier combien d'animaux sont déjà présents dans la cage
+        self.cursor.execute("SELECT COUNT(*) FROM animal WHERE id_cage = %s", (id_cage,))
+        animaux_present = self.cursor.fetchone()[0]
+
+        # Comparer le nombre d'animaux présents à la capacité maximale
+        if animaux_present >= capacite_max:
+            print(f"Erreur : La cage ID {id_cage} est pleine. Capacité max : {capacite_max}, Animaux présents : {animaux_present}.")
+            return
+
+        # Ajouter l'animal si la cage n'est pas pleine
         query = """
             INSERT INTO animal (nom, race, date_naissance, pays_origine, id_cage)
             VALUES (%s, %s, %s, %s, %s)
@@ -62,7 +77,10 @@ class Zoo:
         values = (nom, race, date_naissance, pays_origine, id_cage)
         self.cursor.execute(query, values)
         self.mydb.commit()
-        print(f"Animal {nom} ajouté avec succès.")
+        print(f"Animal {nom} ajouté avec succès à la cage ID {id_cage}.")
+
+
+
 
     def ajouter_cage(self, superficie, capacite_max):
         query = """
@@ -97,10 +115,30 @@ class Zoo:
         else:
             print("Aucun animal dans les cages.")
 
-    def supprimer_animal(self, animal_id):
-        self.cursor.execute("DELETE FROM animal WHERE id = %s", (animal_id,))
+    def deplacer_animal(self, animal_id, nouvelle_cage_id):
+        # Vérifier si la cage de destination existe
+        if not self.verifier_cage_existe(nouvelle_cage_id):
+            print(f"Erreur : La cage ID {nouvelle_cage_id} n'existe pas !")
+            return
+        
+        # Vérifier si l'animal existe dans la base de données
+        self.cursor.execute("SELECT COUNT(*) FROM animal WHERE id = %s", (animal_id,))
+        if self.cursor.fetchone()[0] == 0:
+            print(f"Erreur : L'animal ID {animal_id} n'existe pas !")
+            return
+        
+        # Mettre à jour la cage de l'animal
+        query = "UPDATE animal SET id_cage = %s WHERE id = %s"
+        self.cursor.execute(query, (nouvelle_cage_id, animal_id))
         self.mydb.commit()
-        print(f"Animal ID {animal_id} supprimé avec succès.")
+        print(f"Animal ID {animal_id} déplacé vers la cage ID {nouvelle_cage_id}.")
+
+    def capacite_totale_cages(self):
+        self.cursor.execute("SELECT SUM(capacite_max) FROM cage")
+        capacite_totale = self.cursor.fetchone()[0]
+        print(f"La capacité totale des cages est de {capacite_totale} animaux.")
+
+    
 
     def supprimer_cage(self, cage_id):
         # Avant de supprimer une cage, on vérifie si elle contient des animaux
@@ -156,7 +194,7 @@ def menu():
         print("2. Ajouter un animal")
         print("3. Afficher les animaux")
         print("4. Afficher les animaux par cage")
-        print("5. Supprimer un animal")
+        print("5. Deplacer un animal")
         print("6. Supprimer une cage")
         print("7. Calculer la superficie totale des cages")
         print("8. Quitter")
@@ -179,8 +217,9 @@ def menu():
             case "4":
                 zoo.afficher_animaux_par_cage()
             case "5":
-                animal_id = demander_entier("ID de l'animal à supprimer : ")
-                zoo.supprimer_animal(animal_id)
+                animal_id = demander_entier("ID de l'animal à déplacer : ")
+                nouvelle_cage_id = demander_entier("ID de la nouvelle cage : ")
+                zoo.deplacer_animal(animal_id, nouvelle_cage_id)
             case "6":
                 cage_id = demander_entier("ID de la cage à supprimer : ")
                 zoo.supprimer_cage(cage_id)
